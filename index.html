@@ -22,7 +22,7 @@
 
 <body>
     <h1>test op PWA iOS</h1>
-    <p>class org. v8</p>
+    <p>class org. v9</p>
     <button id="installBtn">Install PWA</button>
     <h1>Console Output in DOM</h1>
     <div id="log"></div>
@@ -52,25 +52,46 @@
             });
         });
 
-        // Register the Service Worker and handle push notifications
-        if ('serviceWorker' in navigator && 'PushManager' in window) {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then(function (swReg) {
-                    console.log('Service Worker Registered', swReg);
-                    return swReg;
-                })
-                .then(function (swReg) {
-                    // Request notification permission
-                    Notification.requestPermission().then(permission => {
-                        if (permission === 'granted') {
-                            console.log('Notification permission granted.');
+        if ('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
+
+            // Check if the app is installed (standalone mode)
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+            if (isStandalone) {
+                // Register the Service Worker
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(function (swReg) {
+                        console.log('Service Worker Registered', swReg);
+
+                        // Check if notification permission is already granted
+                        if (Notification.permission === 'granted') {
+                            console.log('Notification permission already granted.');
                             subscribeUser(swReg); // Subscribe user to push notifications
+
+                        } else if (Notification.permission === 'default') {
+                            // Request notification permission
+                            Notification.requestPermission().then(permission => {
+                                if (permission === 'granted') {
+                                    console.log('Notification permission granted.');
+                                    subscribeUser(swReg); // Subscribe user to push notifications
+                                } else {
+                                    console.log('Notification permission denied.');
+                                }
+                            });
                         } else {
-                            console.log('Notification permission denied.');
+                            console.log('Notification permission already denied.');
                         }
+                    })
+                    .catch(function (error) {
+                        console.error('Service Worker registration failed:', error);
                     });
-                });
+            } else {
+                console.log('PWA is not installed. Push notifications require installation on iOS.');
+            }
+        } else {
+            console.log('Notifications or PushManager not supported in this browser.');
         }
+
 
         // Subscribe user to push notifications
         function subscribeUser(swReg) {
