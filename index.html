@@ -22,8 +22,10 @@
 
 <body>
     <h1>test op PWA iOS</h1>
-    <p>class org. v7</p>
+    <p>class org. v8</p>
     <button id="installBtn">Install PWA</button>
+    <h1>Console Output in DOM</h1>
+    <div id="log"></div>
 
     <script>
         let deferredPrompt;
@@ -132,6 +134,56 @@
             console.log('Subscription sent to server:', subscription);
             // Make an API request to store the subscription on your server
         }
+
+        const logContainer = document.getElementById('log');
+
+        function logToDOM(level, message) {
+            const logMessage = document.createElement('div');
+            logMessage.textContent = message;
+
+            if (level === 'error') {
+                logMessage.classList.add('error');
+            } else if (level === 'warn') {
+                logMessage.classList.add('warn');
+            }
+
+            logContainer.appendChild(logMessage);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Capture console.log
+        const originalConsoleLog = console.log;
+        console.log = function (...args) {
+            originalConsoleLog.apply(console, args);
+            logToDOM('log', args.join(' '));
+        };
+
+        // Capture console.warn
+        const originalConsoleWarn = console.warn;
+        console.warn = function (...args) {
+            originalConsoleWarn.apply(console, args);
+            logToDOM('warn', args.join(' '));
+        };
+
+        // Capture console.error
+        const originalConsoleError = console.error;
+        console.error = function (...args) {
+            originalConsoleError.apply(console, args);
+            logToDOM('error', args.join(' '));
+        };
+
+        // Capture uncaught errors
+        window.onerror = function (message, source, lineno, colno, error) {
+            const errorMessage = `Error: ${message} at ${source}:${lineno}:${colno}`;
+            console.error(errorMessage);  // Log to console
+            logToDOM('error', errorMessage);  // Log to DOM
+            return true; // Prevent the default browser error handling
+        };
+
+        // Example usage
+        console.log('This is a regular log message.');
+        console.warn('This is a warning message.');
+        console.error('This is an error message.');
     </script>
 </body>
 
