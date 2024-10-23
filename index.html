@@ -21,8 +21,8 @@
 </head>
 
 <body>
-    <h1>Welcome to My PWA</h1>
-    <p>Install this app for offline functionality and notifications. v6</p>
+    <h1>test op PWA iOS</h1>
+    <p>class org. v7</p>
     <button id="installBtn">Install PWA</button>
 
     <script>
@@ -78,33 +78,30 @@
                 applicationServerKey: applicationServerKey
             })
                 .then(function (subscription) {
-
                     console.log('User is subscribed:', subscription);
+
+                    const endpoint = subscription.endpoint;
+                    const auth = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh'))));
+                    const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))));
 
                     // Extract the keys from the subscription object
                     const subscriptionObject = {
-                        endpoint: subscription.endpoint,
+                        endpoint: endpoint,
                         keys: {
-                            p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh')))),
-                            auth: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))))
+                            p256dh: p256dh,
+                            auth: auth
                         }
                     };
 
-                    // Create elements to display the values
-                    const endpointElement = document.createElement('div');
-                    endpointElement.textContent = `Endpoint: ${subscriptionObject.endpoint}`;
-
-                    const p256dhElement = document.createElement('div');
-                    p256dhElement.textContent = `p256dh: ${subscriptionObject.keys.p256dh}`;
-
-                    const authElement = document.createElement('div');
-                    authElement.textContent = `Auth: ${subscriptionObject.keys.auth}`;
-
-                    // Append elements to the DOM
-                    document.body.appendChild(endpointElement);
-                    document.body.appendChild(p256dhElement);
-                    document.body.appendChild(authElement);
-
+                    const node = document.createTextNode("ep: " + endpoint);
+                    document.body.appendChild(node);
+                    document.body.appendChild(document.createElement("br"));
+                    const node2 = document.createTextNode("p256dh: " + p256dh);
+                    document.body.appendChild(node2);
+                    document.body.appendChild(document.createElement("br"));
+                    const node3 = document.createTextNode("auth: " + auth);
+                    document.body.appendChild(node3);
+                    document.body.appendChild(document.createElement("br"));
 
                     console.log('Subscription details:', subscriptionObject);
 
