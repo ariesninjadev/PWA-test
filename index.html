@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,15 +12,17 @@
             text-align: center;
             margin-top: 50px;
         }
+
         #installBtn {
             padding: 10px 20px;
             font-size: 16px;
         }
     </style>
 </head>
+
 <body>
     <h1>Welcome to My PWA</h1>
-    <p>Install this app for offline functionality and notifications. v3</p>
+    <p>Install this app for offline functionality and notifications. v4</p>
     <button id="installBtn">Install PWA</button>
 
     <script>
@@ -50,39 +53,52 @@
         // Register the Service Worker and handle push notifications
         if ('serviceWorker' in navigator && 'PushManager' in window) {
             navigator.serviceWorker.register('/service-worker.js')
-            .then(function(swReg) {
-                console.log('Service Worker Registered', swReg);
-                return swReg;
-            })
-            .then(function(swReg) {
-                // Request notification permission
-                Notification.requestPermission().then(permission => {
-                    if (permission === 'granted') {
-                        console.log('Notification permission granted.');
-                        subscribeUser(swReg); // Subscribe user to push notifications
-                    } else {
-                        console.log('Notification permission denied.');
-                    }
+                .then(function (swReg) {
+                    console.log('Service Worker Registered', swReg);
+                    return swReg;
+                })
+                .then(function (swReg) {
+                    // Request notification permission
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            console.log('Notification permission granted.');
+                            subscribeUser(swReg); // Subscribe user to push notifications
+                        } else {
+                            console.log('Notification permission denied.');
+                        }
+                    });
                 });
-            });
         }
 
         // Subscribe user to push notifications
         function subscribeUser(swReg) {
-            const applicationServerKey = urlBase64ToUint8Array('BJnbPGrjjnrYgztekgh4nsCvsAq0paddz14gVBWxK2UNSmNuHYYC2GwWslweVPksmlmKwttLc0d3qpvQ2AX_LgM');  // Replace with your VAPID public key
+            const applicationServerKey = urlBase64ToUint8Array('<YOUR_PUBLIC_VAPID_KEY>');  // Replace with your VAPID public key
             swReg.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: applicationServerKey
             })
-            .then(function(subscription) {
-                console.log('User is subscribed:', subscription);
-                // Send subscription to your backend to store it
-                sendSubscriptionToServer(subscription);
-            })
-            .catch(function(err) {
-                console.error('Failed to subscribe user: ', err);
-            });
+                .then(function (subscription) {
+                    console.log('User is subscribed:', subscription);
+
+                    // Extract the keys from the subscription object
+                    const subscriptionObject = {
+                        endpoint: subscription.endpoint,
+                        keys: {
+                            p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh')))),
+                            auth: btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))))
+                        }
+                    };
+
+                    console.log('Subscription details:', subscriptionObject);
+
+                    // Send the subscription object to your backend for storing and later use
+                    sendSubscriptionToServer(subscriptionObject);
+                })
+                .catch(function (err) {
+                    console.error('Failed to subscribe user: ', err);
+                });
         }
+
 
         // Helper function to convert VAPID key
         function urlBase64ToUint8Array(base64String) {
@@ -104,4 +120,5 @@
         }
     </script>
 </body>
+
 </html>
