@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic PWA</title>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #installBtn {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to My PWA</h1>
+    <p>Install this app for offline functionality and notifications.</p>
+    <button id="installBtn">Install PWA</button>
+
+    <script>
+        let deferredPrompt;
+
+        // Install PWA Button Logic
+        const installBtn = document.getElementById('installBtn');
+        installBtn.style.display = 'none';
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block';
+
+            installBtn.addEventListener('click', () => {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            });
+        });
+
+        // Register the Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+            .then(() => {
+                console.log('Service Worker Registered');
+            });
+        }
+    
+        // Requesting permission for notifications
+        if ('Notification' in window && 'serviceWorker' in navigator) {
+            Notification.requestPermission().then((result) => {
+                if (result === 'granted') {
+                    console.log('Notification permission granted.');
+                } else {
+                    console.log('Notification permission denied.');
+                }
+            });
+        }
+    </script>
+    
+</body>
+</html>
