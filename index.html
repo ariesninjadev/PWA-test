@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic PWA</title>
+    <title>Basic PWA with Push Notifications</title>
     <link rel="manifest" href="/manifest.json">
     <style>
         body {
@@ -19,7 +19,7 @@
 </head>
 <body>
     <h1>Welcome to My PWA</h1>
-    <p>Install this app for offline functionality and notifications. v2</p>
+    <p>Install this app for offline functionality and notifications.</p>
     <button id="installBtn">Install PWA</button>
 
     <script>
@@ -47,25 +47,61 @@
             });
         });
 
-        // Register the Service Worker
-        if ('serviceWorker' in navigator) {
+        // Register the Service Worker and handle push notifications
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
             navigator.serviceWorker.register('/service-worker.js')
-            .then(() => {
-                console.log('Service Worker Registered');
+            .then(function(swReg) {
+                console.log('Service Worker Registered', swReg);
+                return swReg;
+            })
+            .then(function(swReg) {
+                // Request notification permission
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        console.log('Notification permission granted.');
+                        subscribeUser(swReg); // Subscribe user to push notifications
+                    } else {
+                        console.log('Notification permission denied.');
+                    }
+                });
             });
         }
-    
-        // Requesting permission for notifications
-        if ('Notification' in window && 'serviceWorker' in navigator) {
-            Notification.requestPermission().then((result) => {
-                if (result === 'granted') {
-                    console.log('Notification permission granted.');
-                } else {
-                    console.log('Notification permission denied.');
-                }
+
+        // Subscribe user to push notifications
+        function subscribeUser(swReg) {
+            const applicationServerKey = urlBase64ToUint8Array('<YOUR_PUBLIC_VAPID_KEY>');  // Replace with your VAPID public key
+            swReg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: applicationServerKey
+            })
+            .then(function(subscription) {
+                console.log('User is subscribed:', subscription);
+                // Send subscription to your backend to store it
+                sendSubscriptionToServer(subscription);
+            })
+            .catch(function(err) {
+                console.error('Failed to subscribe user: ', err);
             });
+        }
+
+        // Helper function to convert VAPID key
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        // Send subscription object to your backend
+        function sendSubscriptionToServer(subscription) {
+            // You will need to implement this function to send the subscription to your server
+            console.log('Subscription sent to server:', subscription);
+            // Make an API request to store the subscription on your server
         }
     </script>
-    
 </body>
 </html>

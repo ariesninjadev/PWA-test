@@ -8,7 +8,7 @@ const ASSETS_TO_CACHE = [
     '/icon-512x512.png'
 ];
 
-// Install event
+// Install event - Cache the app shell
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
@@ -18,12 +18,23 @@ self.addEventListener('install', (event) => {
     console.log('Service Worker Installed');
 });
 
-// Activate event
+// Activate event - Clean up old caches if needed
 self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then(function(cacheNames) {
+            return Promise.all(
+                cacheNames.filter(function(cacheName) {
+                    return cacheName !== CACHE_NAME;
+                }).map(function(cacheName) {
+                    return caches.delete(cacheName);
+                })
+            );
+        })
+    );
     console.log('Service Worker Activated');
 });
 
-// Fetch event - serves cached assets
+// Fetch event - Serve cached assets if available
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((response) => {
@@ -32,24 +43,17 @@ self.addEventListener('fetch', (event) => {
     );
 });
 
-// Notification logic
-function showNotification() {
-    self.registration.showNotification('Reminder', {
-        body: 'This is a notification from your PWA!',
+// Push event - Display push notification
+self.addEventListener('push', function(event) {
+    const data = event.data.json();
+    const options = {
+        body: data.body,
         icon: '/icon-192x192.png',
         vibrate: [200, 100, 200],
-        tag: 'pwa-notification'
-    });
-}
+        tag: data.tag || 'pwa-notification'
+    };
 
-// Background Sync
-self.addEventListener('sync', (event) => {
-    if (event.tag === 'sync-pwa') {
-        event.waitUntil(showNotification());
-    }
+    event.waitUntil(
+        self.registration.showNotification(data.title, options)
+    );
 });
-
-// Periodic notifications every 5 minutes
-setInterval(() => {
-    showNotification();
-}, 300000); // 300000ms = 5 minutes
