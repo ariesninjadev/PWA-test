@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic PWA with Push Notifications</title>
+    <title>Aries PWA</title>
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -38,7 +38,7 @@
 
 <body>
     <h1>test op PWA iOS</h1>
-    <p>class org. v15</p>
+    <p>class org. v16</p>
     <button id="enableNotificationsBtn">Enable Notifications</button>
     <button id="installBtn">Install PWA</button>
     <!-- <h1>CPRIM output</h1>
@@ -59,12 +59,18 @@
 
         // Install PWA Button Logic
         const installBtn = document.getElementById('installBtn');
+        const enableNotificationsBtn = document.getElementById('enableNotificationsBtn');
         installBtn.style.display = 'none';
+        enableNotificationsBtn.style.display = 'none';
+
+        if (!localStorage.getItem('subscribed')) {
+            document.getElementById('enableNotificationsBtn').style.display = 'initial';
+        }
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            installBtn.style.display = 'block';
+            installBtn.style.display = 'initial';
 
             installBtn.addEventListener('click', () => {
                 deferredPrompt.prompt();
@@ -170,10 +176,7 @@
                     return response.json();
                 })
                 .then(function (responseData) {
-                    if (!(responseData.data && responseData.data.success)) {
-                        throw new Error('Bad response from server.');
-                    }
-                    console.log('Subscription sent to server:', responseData);
+                    console.log('Subscription sent to server.');
                 })
                 .catch(function (error) {
                     console.error('Error sending subscription to server:', error);
@@ -182,7 +185,11 @@
 
             console.log('Subscription sent to server:', subscription);
 
+            localStorage.setItem('subscribed', 'true');
+
             alert('Subscribed to notifications!');
+
+            location.reload();
         }
 
 
