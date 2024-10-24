@@ -1,13 +1,13 @@
 {
-    "name": "testPWA",
-    "short_name": "PWA",
+    "name": "NotifierX",
+    "short_name": "NotifierX",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#dddddd",
     "lang": "en",
     "scope": "/",
-    "description": "This is a test PWA",
-    "categories": ["test", "PWA"],
+    "description": "PWA Enabling the use of push notifications",
+    "categories": ["Notifications", "PWA"],
     "theme_color": "#000000",
     "icons": [
       {
