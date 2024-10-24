@@ -25,7 +25,7 @@
 
 <body>
     <h1>test op PWA iOS</h1>
-    <p>class org. v13</p>
+    <p>class org. v13.1</p>
     <button id="enableNotificationsBtn">Enable Notifications</button>
     <button id="installBtn">Install PWA</button>
     <h1>Console Output in DOM</h1>
@@ -85,7 +85,7 @@
         });
 
         function subscribeUser(swReg) {
-            const applicationServerKey = urlBase64ToUint8Array('YOUR_VAPID_PUBLIC_KEY'); // Replace with your VAPID public key
+            const applicationServerKey = urlBase64ToUint8Array('BJnbPGrjjnrYgztekgh4nsCvsAq0paddz14gVBWxK2UNSmNuHYYC2GwWslweVPksmlmKwttLc0d3qpvQ2AX_LgM'); // Replace with your VAPID public key
             console.log("initializing subscription");
             swReg.pushManager.subscribe({
                 userVisibleOnly: true,
