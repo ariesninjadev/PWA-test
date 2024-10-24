@@ -21,6 +21,11 @@
             font-size: 16px;
         }
 
+        #enableNotificationsBtn {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
         .error {
             color: red;
         }
@@ -33,13 +38,23 @@
 
 <body>
     <h1>test op PWA iOS</h1>
-    <p>class org. v13.2</p>
+    <p>class org. v14</p>
     <button id="enableNotificationsBtn">Enable Notifications</button>
     <button id="installBtn">Install PWA</button>
-    <h1>CPRIM output</h1>
-    <div id="log"></div>
+    <!-- <h1>CPRIM output</h1>
+    <div id="log"></div> -->
 
     <script>
+
+        function generateDescriptiveID() {
+            // Should utilize aspects including user agent string, OS
+            const userAgent = navigator.userAgent;
+            const os = navigator.platform;
+            const randomNum = Math.floor(Math.random() * 1000);
+            // Replace whitespace and special characters with underscores
+            return `${userAgent}_${os}_${randomNum}`.replace(/[^a-zA-Z0-9]/g, '_');
+        }
+
         let deferredPrompt;
 
         // Install PWA Button Logic
@@ -138,60 +153,86 @@
 
         // Send subscription object to your backend
         function sendSubscriptionToServer(subscription) {
-            // You will need to implement this function to send the subscription to your server
+            
+            // Send post to https://klay.lol:1234/subscribe with body as subscription object and header "x-device-id" with a unique device id
+            fetch('https://klay.lol:1234/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-device-id': generateDescriptiveID()
+                },
+                body: JSON.stringify(subscription)
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Bad status code from server.');
+                    }
+                    return response.json();
+                })
+                .then(function (responseData) {
+                    if (!(responseData.data && responseData.data.success)) {
+                        throw new Error('Bad response from server.');
+                    }
+                    console.log('Subscription sent to server:', responseData);
+                })
+                .catch(function (error) {
+                    console.error('Error sending subscription to server:', error);
+                });
+            
+
             console.log('Subscription sent to server:', subscription);
         }
 
 
-        const logContainer = document.getElementById('log');
+        // const logContainer = document.getElementById('log');
 
-        function logToDOM(level, message) {
-            const logMessage = document.createElement('div');
-            logMessage.textContent = message;
+        // function logToDOM(level, message) {
+        //     const logMessage = document.createElement('div');
+        //     logMessage.textContent = message;
 
-            if (level === 'error') {
-                logMessage.classList.add('error');
-            } else if (level === 'warn') {
-                logMessage.classList.add('warn');
-            }
+        //     if (level === 'error') {
+        //         logMessage.classList.add('error');
+        //     } else if (level === 'warn') {
+        //         logMessage.classList.add('warn');
+        //     }
 
-            logContainer.appendChild(logMessage);
-            logContainer.scrollTop = logContainer.scrollHeight;
-        }
+        //     logContainer.appendChild(logMessage);
+        //     logContainer.scrollTop = logContainer.scrollHeight;
+        // }
 
-        // Capture console.log
-        const originalConsoleLog = console.log;
-        console.log = function (...args) {
-            originalConsoleLog.apply(console, args);
-            logToDOM('log', args.join(' '));
-        };
+        // // Capture console.log
+        // const originalConsoleLog = console.log;
+        // console.log = function (...args) {
+        //     originalConsoleLog.apply(console, args);
+        //     logToDOM('log', args.join(' '));
+        // };
 
-        // Capture console.warn
-        const originalConsoleWarn = console.warn;
-        console.warn = function (...args) {
-            originalConsoleWarn.apply(console, args);
-            logToDOM('warn', args.join(' '));
-        };
+        // // Capture console.warn
+        // const originalConsoleWarn = console.warn;
+        // console.warn = function (...args) {
+        //     originalConsoleWarn.apply(console, args);
+        //     logToDOM('warn', args.join(' '));
+        // };
 
-        // Capture console.error
-        const originalConsoleError = console.error;
-        console.error = function (...args) {
-            originalConsoleError.apply(console, args);
-            logToDOM('error', args.join(' '));
-        };
+        // // Capture console.error
+        // const originalConsoleError = console.error;
+        // console.error = function (...args) {
+        //     originalConsoleError.apply(console, args);
+        //     logToDOM('error', args.join(' '));
+        // };
 
-        // Capture uncaught errors
-        window.onerror = function (message, source, lineno, colno, error) {
-            const errorMessage = `Error: ${message} at ${source}:${lineno}:${colno}`;
-            console.error(errorMessage);  // Log to console
-            logToDOM('error', errorMessage);  // Log to DOM
-            return true; // Prevent the default browser error handling
-        };
+        // // Capture uncaught errors
+        // window.onerror = function (message, source, lineno, colno, error) {
+        //     const errorMessage = `Error: ${message} at ${source}:${lineno}:${colno}`;
+        //     console.error(errorMessage);  // Log to console
+        //     logToDOM('error', errorMessage);  // Log to DOM
+        //     return true; // Prevent the default browser error handling
+        // };
 
-        // Example usage
-        console.log('This is a regular log message.');
-        console.warn('This is a warning message.');
-        console.error('This is an error message.');
+        // // Example usage
+        // console.log('This is a regular log message.');
+        // console.warn('This is a warning message.');
+        // console.error('This is an error message.');
     </script>
 </body>
 
