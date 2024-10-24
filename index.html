@@ -86,6 +86,7 @@
 
         function subscribeUser(swReg) {
             const applicationServerKey = urlBase64ToUint8Array('YOUR_VAPID_PUBLIC_KEY'); // Replace with your VAPID public key
+            console.log("initializing subscription");
             swReg.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: applicationServerKey
