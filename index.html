@@ -25,7 +25,8 @@
 
 <body>
     <h1>test op PWA iOS</h1>
-    <p>class org. v12.1</p>
+    <p>class org. v13</p>
+    <button id="enableNotificationsBtn">Enable Notifications</button>
     <button id="installBtn">Install PWA</button>
     <h1>Console Output in DOM</h1>
     <div id="log"></div>
@@ -55,50 +56,36 @@
             });
         });
 
-        if ('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
+        document.getElementById('enableNotificationsBtn').addEventListener('click', function () {
+            // Register the Service Worker if not already registered
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(function (swReg) {
+                    console.log('Service Worker Registered', swReg);
 
-            // Check if the app is installed (standalone mode)
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+                    // Request notification permission
+                    if (Notification.permission === 'default') {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === 'granted') {
+                                console.log('Notification permission granted.');
+                                subscribeUser(swReg); // Subscribe user to push notifications
+                            } else {
+                                console.log('Notification permission denied.');
+                            }
+                        });
+                    } else if (Notification.permission === 'granted') {
+                        console.log('Notification permission already granted.');
+                        subscribeUser(swReg); // Subscribe user to push notifications
+                    } else {
+                        console.log('Notification permission already denied.');
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Service Worker registration failed:', error);
+                });
+        });
 
-            if (isStandalone) {
-                // Register the Service Worker
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(function (swReg) {
-                        console.log('Service Worker Registered', swReg);
-
-                        // Check if notification permission is already granted
-                        if (Notification.permission === 'granted') {
-                            console.log('Notification permission already granted.');
-                            subscribeUser(swReg); // Subscribe user to push notifications
-
-                        } else if (Notification.permission === 'default') {
-                            // Request notification permission
-                            Notification.requestPermission().then(permission => {
-                                if (true) {
-                                    console.log('Notification permission granted.');
-                                    subscribeUser(swReg); // Subscribe user to push notifications
-                                } else {
-                                    console.log('Notification permission denied.');
-                                }
-                            });
-                        } else {
-                            console.log('Notification permission already denied.');
-                        }
-                    })
-                    .catch(function (error) {
-                        console.error('Service Worker registration failed:', error);
-                    });
-            } else {
-                console.log('PWA is not installed. Push notifications require installation on iOS.');
-            }
-        } else {
-            console.log('Notifications or PushManager not supported in this browser.');
-        }
-
-
-        // Subscribe user to push notifications
         function subscribeUser(swReg) {
-            const applicationServerKey = urlBase64ToUint8Array('BJnbPGrjjnrYgztekgh4nsCvsAq0paddz14gVBWxK2UNSmNuHYYC2GwWslweVPksmlmKwttLc0d3qpvQ2AX_LgM');  // Replace with your VAPID public key
+            const applicationServerKey = urlBase64ToUint8Array('YOUR_VAPID_PUBLIC_KEY'); // Replace with your VAPID public key
             swReg.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: applicationServerKey
@@ -107,18 +94,10 @@
                     console.log('User is subscribed:', subscription);
 
                     const endpoint = subscription.endpoint;
-                    const auth = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh'))));
-                    const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))));
+                    const auth = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))));
+                    const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh'))));
 
-                    // Extract the keys from the subscription object
-                    const subscriptionObject = {
-                        endpoint: endpoint,
-                        keys: {
-                            p256dh: p256dh,
-                            auth: auth
-                        }
-                    };
-
+                    // Display subscription details in the DOM
                     const node = document.createTextNode("ep: " + endpoint);
                     document.body.appendChild(node);
                     document.body.appendChild(document.createElement("br"));
@@ -129,18 +108,14 @@
                     document.body.appendChild(node3);
                     document.body.appendChild(document.createElement("br"));
 
-                    console.log('Subscription details:', subscriptionObject);
-
-                    // Send the subscription object to your backend for storing and later use
-                    sendSubscriptionToServer(subscriptionObject);
+                    // Send the subscription object to your backend
+                    sendSubscriptionToServer({ endpoint, keys: { p256dh, auth } });
                 })
                 .catch(function (err) {
                     console.error('Failed to subscribe user: ', err);
                 });
         }
 
-
-        // Helper function to convert VAPID key
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
             const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
@@ -156,8 +131,8 @@
         function sendSubscriptionToServer(subscription) {
             // You will need to implement this function to send the subscription to your server
             console.log('Subscription sent to server:', subscription);
-            // Make an API request to store the subscription on your server
         }
+
 
         const logContainer = document.getElementById('log');
 
